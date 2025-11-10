@@ -139,7 +139,7 @@ changelog:
 # Release configuration
 release:
   github:
-    owner: yourusername
+    owner: yingfu9218
     name: monitor-system
   draft: false
   prerelease: auto
