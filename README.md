@@ -187,7 +187,6 @@ git push origin v1.0.0
 
 # 2. 使用 GoReleaser 发布（会自动推送到 GitHub Releases）
 make release
-
 # 或创建快照版本（不需要 git tag）
 make release-snapshot
 ```
