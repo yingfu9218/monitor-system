@@ -2,3 +2,5 @@
 logs/*
 data/*
 bin/*
+dist/*
+*.log
