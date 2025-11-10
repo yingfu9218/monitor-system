@@ -1,6 +1,5 @@
 .idea/*
 logs/*
-data/*
 bin/*
 dist/*
 *.log
