@@ -1,0 +1,15 @@
+server:
+  id: "server-001"
+  name: "生产服务器 01"
+  location: "北京"
+
+api:
+  endpoint: "http://localhost:8080"
+  agent_key: "your-secret-agent-key"
+
+reporting:
+  interval: 5
+
+logging:
+  level: "info"
+  file: "./logs/agent.log"
