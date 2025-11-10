@@ -1,0 +1,181 @@
+# GoReleaser configuration for Monitor System
+# https://goreleaser.com/customization/
+
+version: 2
+
+# Project metadata
+project_name: monitor-system
+
+# Build configuration
+builds:
+  # Monitor Server
+  - id: server
+    main: ./cmd/server
+    binary: monitor-server
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    # Build tags and flags
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    # Ignore specific combinations
+    ignore:
+      - goos: darwin
+        goarch: arm64
+        # SQLite with CGO can be tricky on cross-compilation
+      - goos: windows
+        goarch: arm64
+        # Windows ARM64 support is limited
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
+
+  # Monitor Agent
+  - id: agent
+    main: ./cmd/agent
+    binary: monitor-agent
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    ignore:
+      - goos: darwin
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
+
+# Archive configuration
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # Include additional files
+    files:
+      - README.md
+      - LICENSE*
+      - configs/*.yaml
+    # Format overrides for Windows
+    format_overrides:
+      - goos: windows
+        format: zip
+
+# Checksum configuration
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+# Snapshot configuration (for non-tagged builds)
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+# Changelog configuration
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - 'merge conflict'
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: 'New Features'
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Performance Improvements'
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: 'Refactors'
+      regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: 'Other Changes'
+      order: 999
+
+# Release configuration
+release:
+  github:
+    owner: yourusername
+    name: monitor-system
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Monitor System {{ .Tag }} ({{ .Date }})
+
+    Welcome to this new release!
+  footer: |
+    ## Installation
+
+    Download the appropriate archive for your platform and extract it.
+
+    ### Server
+    ```bash
+    ./monitor-server -config ./configs/server-config.yaml
+    ```
+
+    ### Agent
+    ```bash
+    ./monitor-agent -config ./configs/agent-config.yaml
+    ```
+
+# Announce (optional - configure if you want to announce releases)
+# announce:
+#   skip: '{{gt .Patch 0}}'  # Skip patch releases
+
+# Docker images (optional - uncomment if you want Docker support)
+# dockers:
+#   - image_templates:
+#       - "yourusername/monitor-server:{{ .Tag }}"
+#       - "yourusername/monitor-server:latest"
+#     dockerfile: Dockerfile.server
+#     build_flag_templates:
+#       - "--pull"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Version}}"
