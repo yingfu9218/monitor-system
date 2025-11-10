@@ -2,6 +2,7 @@
 
 一个基于 Golang 的轻量级服务器监控系统，包含 API Server 和 Agent 两个组件。
 
+app客户端应用请访问 https://github.com/yingfu9218/monitor 下载安装
 ## 系统架构
 
 ```
