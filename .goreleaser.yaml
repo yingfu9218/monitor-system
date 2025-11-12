@@ -92,7 +92,8 @@ archives:
     files:
       - README.md
       - LICENSE*
-      - configs/*.yaml
+      - configs/**/*
+      - data/**/*
     # Format overrides for Windows
     format_overrides:
       - goos: windows

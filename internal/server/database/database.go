@@ -170,6 +170,52 @@ func (db *DB) GetServer(id string) (*model.Server, error) {
 	return &s, err
 }
 
+func (db *DB) DeleteServer(id string) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Delete server
+	_, err = tx.Exec(`DELETE FROM servers WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+
+	// Delete related metrics
+	_, err = tx.Exec(`DELETE FROM metrics WHERE server_id = ?`, id)
+	if err != nil {
+		return err
+	}
+
+	// Delete related server info
+	_, err = tx.Exec(`DELETE FROM server_info WHERE server_id = ?`, id)
+	if err != nil {
+		return err
+	}
+
+	// Delete related disks
+	_, err = tx.Exec(`DELETE FROM disks WHERE server_id = ?`, id)
+	if err != nil {
+		return err
+	}
+
+	// Delete related processes
+	_, err = tx.Exec(`DELETE FROM processes WHERE server_id = ?`, id)
+	if err != nil {
+		return err
+	}
+
+	// Delete related network interfaces
+	_, err = tx.Exec(`DELETE FROM network_interfaces WHERE server_id = ?`, id)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (db *DB) InsertMetrics(metrics *model.Metrics) error {
 	query := `
 	INSERT INTO metrics (server_id, timestamp, cpu, memory, disk_read, disk_write, network_in, network_out)

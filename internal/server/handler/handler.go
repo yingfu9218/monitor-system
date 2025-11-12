@@ -176,6 +176,25 @@ func (h *Handler) GetNetwork(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"interfaces": interfaces})
 }
 
+func (h *Handler) DeleteServer(c *gin.Context) {
+	serverID := c.Param("id")
+
+	// Check if server exists
+	_, err := h.db.GetServer(serverID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Server not found"})
+		return
+	}
+
+	// Delete server and all related data
+	if err := h.db.DeleteServer(serverID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Server deleted successfully"})
+}
+
 func (h *Handler) AgentReport(c *gin.Context) {
 	var report model.AgentReport
 	if err := c.ShouldBindJSON(&report); err != nil {

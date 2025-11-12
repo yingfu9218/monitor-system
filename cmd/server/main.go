@@ -54,6 +54,7 @@ func main() {
 		api.POST("/auth/verify", h.VerifyAuth)
 		api.GET("/servers", h.GetServers)
 		api.GET("/servers/:id", h.GetServerDetail)
+		api.DELETE("/servers/:id", h.DeleteServer)
 		api.GET("/servers/:id/history", h.GetHistory)
 		api.GET("/servers/:id/disks", h.GetDisks)
 		api.GET("/servers/:id/processes", h.GetProcesses)
