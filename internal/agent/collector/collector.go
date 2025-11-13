@@ -68,20 +68,40 @@ func (c *Collector) CollectMetrics() (*model.Metrics, error) {
 		}
 	}
 
-	// Network
-	netIO, err := net.IOCounters(false)
+	// Network - 排除 loopback 接口，只统计真实网络流量
+	netIO, err := net.IOCounters(true) // true 表示获取每个接口的统计
 	if err == nil && len(netIO) > 0 {
 		now := time.Now()
 		elapsed := now.Sub(c.lastTime).Seconds()
 
-		if last, ok := c.lastNetIO["total"]; ok {
-			if elapsed > 0 {
-				// MB/s
-				metrics.NetworkIn = float64(netIO[0].BytesRecv-last.BytesRecv) / elapsed / 1024 / 1024
-				metrics.NetworkOut = float64(netIO[0].BytesSent-last.BytesSent) / elapsed / 1024 / 1024
+		var totalBytesRecv, totalBytesSent uint64
+		var lastTotalRecv, lastTotalSent uint64
+
+		// 汇总所有非 loopback 接口的流量
+		for _, io := range netIO {
+			// 跳过 loopback 接口
+			if io.Name == "lo" || io.Name == "lo0" {
+				continue
 			}
+
+			totalBytesRecv += io.BytesRecv
+			totalBytesSent += io.BytesSent
+
+			// 获取上次的数据
+			if last, ok := c.lastNetIO[io.Name]; ok {
+				lastTotalRecv += last.BytesRecv
+				lastTotalSent += last.BytesSent
+			}
+
+			// 更新该接口的历史数据
+			c.lastNetIO[io.Name] = io
 		}
-		c.lastNetIO["total"] = netIO[0]
+
+		// 计算速度 (MB/s)
+		if elapsed > 0 && lastTotalRecv > 0 && lastTotalSent > 0 {
+			metrics.NetworkIn = float64(totalBytesRecv-lastTotalRecv) / elapsed / 1024 / 1024
+			metrics.NetworkOut = float64(totalBytesSent-lastTotalSent) / elapsed / 1024 / 1024
+		}
 	}
 
 	c.lastTime = time.Now()
